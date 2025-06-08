@@ -43,7 +43,6 @@ canvas {
   left: 50%;
   width: 800px;          /* dimensioni logiche del gioco */
   height: 600px;
-  transform: translate(-50%, -50%) scale(1); /* scale() verrà aggiornato via JS */
   transform-origin: top left;
 }
 
@@ -329,7 +328,7 @@ canvas {
 
       function showVictoryAndAdvance() {
         const winnerSound = document.getElementById('winnerSound'); if (winnerSound) winnerSound.play().catch(()=>{});
-        const names = {1:'Maurizio',2:'Francesco',3:'Gabriele'};
+        const names = {1:'Lorenzo P.',2:'Karim',3:'Lorenzo Cap.'};
         imgRover.src = `rover${level}.png`;
         showOverlay(`Hai liberato ${names[level]}!`,2000,()=>{
           let roverX = canvas.width + 120;
@@ -390,11 +389,26 @@ canvas {
       }
 
       /* ⑤ Funzione di resize – da aggiungere in fondo alla IIFE prima di waitAssetsThenStart() */
-function resizeGameArea() {
-  const scale = Math.min(window.innerWidth / 800, window.innerHeight / 600);
-  document.getElementById('gameContainer').style.transform =
-    `translate(-50%, -50%) scale(${scale})`;
+function resizeGameArea () {
+  const container = document.getElementById('gameContainer');
+
+  // fattore di scala massimo che preserva il 4:3
+  const scale = Math.min(
+      window.innerWidth  / 800,
+      window.innerHeight / 600
+  );
+
+  // metà della dimensione *dopo* la scala = quanto va spostato all’indietro
+  const tx = -400 * scale;   // 800/2
+  const ty = -300 * scale;   // 600/2
+
+  container.style.transform = `translate(${tx}px, ${ty}px) scale(${scale})`;
 }
+
+window.addEventListener('resize', resizeGameArea);
+window.addEventListener('orientationchange', resizeGameArea);
+resizeGameArea();   // prima chiamata subito
+
 window.addEventListener('resize', resizeGameArea);
 window.addEventListener('orientationchange', resizeGameArea);
 resizeGameArea();   // chiamata subito all’avvio
@@ -407,7 +421,18 @@ resizeGameArea();   // chiamata subito all’avvio
       }
       window.addEventListener('keydown',()=>{ const music=document.getElementById('bgMusic'); if(music && music.paused) music.play().catch(()=>{}); if (!running) waitAssetsThenStart(); },{once:true});
       showOverlay('Caricamento...');
-      const preloadCheck = setInterval(()=>{ if (assetsReady()) { clearInterval(preloadCheck); showOverlay('Premi un tasto per iniziare\n← → per muoverti, Spazio/↑ per saltare',0,null,true); } },100);
+
+const startTime = Date.now();
+
+const preloadCheck = setInterval(() => {
+  const elapsed = Date.now() - startTime;
+
+  if (assetsReady() && elapsed >= 5000) {
+    clearInterval(preloadCheck);
+    showOverlay('Premi un tasto per iniziare\n← → per muoverti, Spazio/↑ per saltare', 0, null, true);
+  }
+}, 100);
+
     })();
   </script>
 </body>
